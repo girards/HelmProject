@@ -1,0 +1,81 @@
+version: 2.1
+executors:
+  docker-publisher:
+    environment:
+      FRONTEND_IMAGE_NAME: nicolasgirardot/helm-project-frontend
+      BACKEND_IMAGE_NAME: nicolasgirardot/helm-project-backend
+    docker:
+      - image: circleci/buildpack-deps:stretch
+jobs:
+  build-frontend:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Frontend Docker image
+          command: |
+            docker build -t $FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH ./frontend
+      - run:
+          name: Archive Frontend Docker image
+          command: docker save -o frontend-image.tar $FRONTEND_IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./frontend-image.tar
+  build-backend:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Backend Docker image
+          command: |
+            docker build -t $BACKEND_IMAGE_NAME:$CIRCLE_BRANCH ./backend
+      - run:
+          name: Archive  BackendDocker image
+          command: docker save -o backend-image.tar $BACKEND_IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./backend-image.tar
+  publish-frontend:
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Frontend Docker image
+          command: docker load -i /tmp/workspace/frontend-image.tar
+      - run:
+          name: Publish Frontend Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push $IMAGE_NAME:$CIRCLE_BRANCH
+  publish-backend:
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Backend Docker image
+          command: docker load -i /tmp/workspace/backend-image.tar
+      - run:
+          name: Publish Backend Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push $IMAGE_NAME:$CIRCLE_BRANCH
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-frontend
+      - publish-frontend:
+          requires:
+            - build-frontend
+      - build-backend
+      - publish-backend:
+          requires:
+            - build-backend

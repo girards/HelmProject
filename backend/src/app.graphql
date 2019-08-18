@@ -1,0 +1,7 @@
+type Branch {
+  name: String
+}
+
+type Query {
+  getBranch: Branch
+}
