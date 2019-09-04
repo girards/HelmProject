@@ -1,4 +1,15 @@
 version: 2.1
+dependencies:
+  pre:
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update --version 120.0.0
+    # Save the string to a text file
+    - echo $SERVICE_KEY > key.txt
+    # Decode the Service Account
+    - base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+    # Authenticate CircleCI with the service account file
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account ${ACCOUNT_ID} --key-file ${HOME}/gcloud-service-key.json
+    # Set the default project
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
 executors:
   docker-publisher:
     environment:
@@ -51,8 +62,7 @@ jobs:
       - run:
           name: Publish Frontend Docker Image to Docker Hub
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH
+            sudo /opt/google-cloud-sdk/bin/gcloud docker -- push gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH
   publish-backend:
     executor: docker-publisher
     steps:
@@ -65,8 +75,7 @@ jobs:
       - run:
           name: Publish Backend Docker Image to Docker Hub
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $BACKEND_IMAGE_NAME:$CIRCLE_BRANCH
+            sudo /opt/google-cloud-sdk/bin/gcloud docker -- push gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME:$CIRCLE_BRANCH
 workflows:
   version: 2
   build:
@@ -79,3 +88,7 @@ workflows:
       - publish-backend:
           requires:
             - build-backend
+machine:
+  environment:
+    PROJECT_ID: nodal-reserve-249310
+    CONTAINER_NAME: node-app
