@@ -1,18 +1,18 @@
 version: 2.1
 orbs:
-  gcr: circleci/gcp-gcr@0.0.2
+  gcp-gcr: circleci/gcp-gcr@0.6.1
 jobs:
   build-and-publish-frontend:
     machine: true
     steps:
-      - gcr/build-and-push-image:
+      - gcp-gcr/build-and-push-image:
           image: eu.gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
           path-to-dockerfile: ../frontend/Dockerfile
   build-and-publish-backend:
     machine: true
     steps:
-      - gcr/build-and-push-image:
+      - gcp-gcr/build-and-push-image:
           image: eu.gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
           path-to-dockerfile: ../backend/Dockerfile
