@@ -20,9 +20,9 @@ jobs:
           command: |
             gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run:
-          name: gcloud Set Project IC
+          name: gcloud Set Project
           command: |
-            gcloud config set project $PROJECT_ID
+            gcloud config set project ${PROJECT_ID}
       - run:
           name: start docker
           command: |
