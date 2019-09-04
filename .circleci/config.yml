@@ -8,8 +8,8 @@ workflows:
       - gcp-gcr/build-and-push-image:
           image: eu.gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
-          path-to-dockerfile: ../frontend/Dockerfile
+          path: ../frontend/
       - gcp-gcr/build-and-push-image:
           image: eu.gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
-          path-to-dockerfile: ../backend/Dockerfile
+          path: ../backend/
