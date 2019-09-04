@@ -1,16 +1,4 @@
 version: 2.1
-dependencies:
-  pre:
-    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update --version 120.0.0
-    # Save the string to a text file
-    - echo $SERVICE_KEY > key.txt
-    # Decode the Service Account
-    - base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
-    # Authenticate CircleCI with the service account file
-    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account ${ACCOUNT_ID} --key-file ${HOME}/gcloud-service-key.json
-    # Set the default project
-    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
-    - sudo service docker start
 executors:
   docker-publisher:
     environment:
@@ -19,6 +7,31 @@ executors:
     docker:
       - image: google/cloud-sdk
 jobs:
+  gcloud-setup:
+    executor: docker-publisher
+    steps:
+      - run:
+          name: Update gcloud
+          command: |
+            gcloud --quiet components update --version 120.0.0
+      - run:
+          name: Move json key
+          command: |
+            echo $SERVICE_KEY > key.txt
+            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+      - run:
+          name: gcloud Authenticate
+          command: |
+            gcloud auth activate-service-account ${ACCOUNT_ID} --key-file ${HOME}/gcloud-service-key.json
+      - run:
+          name: gcloud Set Project IC
+          command: |
+            gcloud config set project $PROJECT_ID
+      - run:
+          name: start docker
+          command: |
+            sudo service docker start
+
   build-frontend:
     executor: docker-publisher
     steps:
@@ -81,6 +94,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - gcloud-setup
       - build-frontend
       - publish-frontend:
           requires:
