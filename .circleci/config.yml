@@ -2,10 +2,10 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      FRONTEND_IMAGE_NAME: nicolasgirardot/helm-project-frontend
-      BACKEND_IMAGE_NAME: nicolasgirardot/helm-project-backend
+      FRONTEND_IMAGE_NAME: helm-project-frontend
+      BACKEND_IMAGE_NAME: helm-project-backend
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: google/cloud-sdk
 jobs:
   build-frontend:
     executor: docker-publisher
@@ -15,10 +15,10 @@ jobs:
       - run:
           name: Build Frontend Docker image
           command: |
-            docker build -t $FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH ./frontend
+            docker build -t gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH ./frontend
       - run:
           name: Archive Frontend Docker image
-          command: docker save -o frontend-image.tar $FRONTEND_IMAGE_NAME
+          command: docker save -o frontend-image.tar gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
       - persist_to_workspace:
           root: .
           paths:
@@ -31,10 +31,10 @@ jobs:
       - run:
           name: Build Backend Docker image
           command: |
-            docker build -t $BACKEND_IMAGE_NAME:$CIRCLE_BRANCH ./backend
+            docker build -t gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME:$CIRCLE_BRANCH ./backend
       - run:
           name: Archive  BackendDocker image
-          command: docker save -o backend-image.tar $BACKEND_IMAGE_NAME
+          command: docker save -o backend-image.tar gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
       - persist_to_workspace:
           root: .
           paths:
@@ -49,10 +49,16 @@ jobs:
           name: Load archived Frontend Docker image
           command: docker load -i /tmp/workspace/frontend-image.tar
       - run:
+          name: Auth Gcloud
+          command: |
+            echo $SERVICE_KEY > key.txt
+            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${PROJECT_ID}
+      - run:
           name: Publish Frontend Docker Image to Docker Hub
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH
+            gcloud docker -- push gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH
   publish-backend:
     executor: docker-publisher
     steps:
@@ -63,10 +69,16 @@ jobs:
           name: Load archived Backend Docker image
           command: docker load -i /tmp/workspace/backend-image.tar
       - run:
+          name: Auth Gcloud
+          command: |
+            echo $SERVICE_KEY > key.txt
+            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${PROJECT_ID}
+      - run:
           name: Publish Backend Docker Image to Docker Hub
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $BACKEND_IMAGE_NAME:$CIRCLE_BRANCH
+            gcloud docker -- push gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME:$CIRCLE_BRANCH
 workflows:
   version: 2
   build:
