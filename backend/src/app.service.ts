@@ -9,7 +9,7 @@ export class AppService {
     @InjectRepository(Branch)
     private readonly branchRepository: Repository<Branch>) {
 
-    this.branchRepository.create({ name: 'default' }).save();
+    this.branchRepository.create({ name: 'none' }).save();
   }
   async getHello(): Promise<Branch> {
     return (await this.branchRepository.find())[0];
