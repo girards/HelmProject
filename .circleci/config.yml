@@ -11,10 +11,6 @@ jobs:
     executor: docker-publisher
     steps:
       - run:
-          name: Update gcloud
-          command: |
-            gcloud --quiet components update --version 120.0.0
-      - run:
           name: Move json key
           command: |
             echo $SERVICE_KEY > key.txt
