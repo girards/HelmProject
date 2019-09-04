@@ -6,20 +6,6 @@ executors:
       BACKEND_IMAGE_NAME: nicolasgirardot/helm-project-backend
     docker:
       - image: google/cloud-sdk
-    commands:
-      - run:
-          name: Move json key
-          command: |
-            echo $SERVICE_KEY > key.txt
-            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
-      - run:
-          name: gcloud Authenticate
-          command: |
-            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run:
-          name: gcloud Set Project
-          command: |
-            gcloud --quiet config set project ${PROJECT_ID}
 jobs:
   build-frontend:
     executor: docker-publisher
@@ -63,6 +49,13 @@ jobs:
           name: Load archived Frontend Docker image
           command: docker load -i /tmp/workspace/frontend-image.tar
       - run:
+          name: Auth Gcloud
+          command: |
+            echo $SERVICE_KEY > key.txt
+            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${PROJECT_ID}
+      - run:
           name: Publish Frontend Docker Image to Docker Hub
           command: |
             gcloud docker -- push gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH
@@ -75,6 +68,13 @@ jobs:
       - run:
           name: Load archived Backend Docker image
           command: docker load -i /tmp/workspace/backend-image.tar
+      - run:
+          name: Auth Gcloud
+          command: |
+            echo $SERVICE_KEY > key.txt
+            base64 -i key.txt -d > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${PROJECT_ID}
       - run:
           name: Publish Backend Docker Image to Docker Hub
           command: |
