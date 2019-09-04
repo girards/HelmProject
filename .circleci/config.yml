@@ -2,8 +2,8 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      FRONTEND_IMAGE_NAME: nicolasgirardot/helm-project-frontend
-      BACKEND_IMAGE_NAME: nicolasgirardot/helm-project-backend
+      FRONTEND_IMAGE_NAME: helm-project-frontend
+      BACKEND_IMAGE_NAME: helm-project-backend
     docker:
       - image: google/cloud-sdk
 jobs:
@@ -91,7 +91,3 @@ workflows:
       - publish-backend:
           requires:
             - build-backend
-machine:
-  environment:
-    PROJECT_ID: nodal-reserve-249310
-    CONTAINER_NAME: node-app
