@@ -10,13 +10,14 @@ dependencies:
     - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account ${ACCOUNT_ID} --key-file ${HOME}/gcloud-service-key.json
     # Set the default project
     - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
+    - sudo service docker start
 executors:
   docker-publisher:
     environment:
       FRONTEND_IMAGE_NAME: nicolasgirardot/helm-project-frontend
       BACKEND_IMAGE_NAME: nicolasgirardot/helm-project-backend
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: google/cloud-sdk
 jobs:
   build-frontend:
     executor: docker-publisher
