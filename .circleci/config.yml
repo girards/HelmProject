@@ -2,8 +2,8 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      FRONTEND_IMAGE_NAME: helm-project-frontend
-      BACKEND_IMAGE_NAME: helm-project-backend
+      FRONTEND_IMAGE_NAME: frontend
+      BACKEND_IMAGE_NAME: backend
     docker:
       - image: google/cloud-sdk
 jobs:
