@@ -1,81 +1,24 @@
 version: 2.1
 orbs:
   gcr: circleci/gcp-gcr@0.0.2
-executors:
-  docker-publisher:
-    environment:
-      FRONTEND_IMAGE_NAME: frontend
-      BACKEND_IMAGE_NAME: backend
-    docker:
-      - image: google/cloud-sdk
 jobs:
-  build-frontend:
-    executor: docker-publisher
+  build-and-publish-frontend:
+    machine: true
     steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build Frontend Docker image
-          command: |
-            docker build -t gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME:$CIRCLE_BRANCH ./frontend
-      - run:
-          name: Archive Frontend Docker image
-          command: docker save -o frontend-image.tar gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./frontend-image.tar
-  build-backend:
-    executor: docker-publisher
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build Backend Docker image
-          command: |
-            docker build -t gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME:$CIRCLE_BRANCH ./backend
-      - run:
-          name: Archive  BackendDocker image
-          command: docker save -o backend-image.tar gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./backend-image.tar
-  publish-frontend:
-    executor: docker-publisher
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Frontend Docker image
-          command: docker load -i /tmp/workspace/frontend-image.tar
-      - gcr/gcr-auth
-      - gcr/push-image:
-          image: gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
+      - gcr/build-and-push-image:
+          image: eu.gcr.io/${PROJECT_ID}/$FRONTEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
-  publish-backend:
-    executor: docker-publisher
+          path-to-dockerfile: ../frontend/Dockerfile
+  build-and-publish-backend:
+    machine: true
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Backend Docker image
-          command: docker load -i /tmp/workspace/backend-image.tar
-      - gcr/gcr-auth
-      - gcr/push-image:
-          image: gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
+      - gcr/build-and-push-image:
+          image: eu.gcr.io/${PROJECT_ID}/$BACKEND_IMAGE_NAME
           tag: $CIRCLE_BRANCH
+          path-to-dockerfile: ../backend/Dockerfile
 workflows:
   version: 2
   build:
     jobs:
-      - build-frontend
-      - publish-frontend:
-          requires:
-            - build-frontend
-      - build-backend
-      - publish-backend:
-          requires:
-            - build-backend
+      - build-and-publish-backend
+      - build-and-publish-frontend
