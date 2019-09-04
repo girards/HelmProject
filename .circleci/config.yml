@@ -22,11 +22,7 @@ jobs:
       - run:
           name: gcloud Set Project
           command: |
-            gcloud config set project ${PROJECT_ID}
-      - run:
-          name: start docker
-          command: |
-            sudo service docker start
+            gcloud --quiet config set project ${PROJECT_ID}
 
   build-frontend:
     executor: docker-publisher
