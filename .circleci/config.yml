@@ -6,10 +6,10 @@ workflows:
   build:
     jobs:
       - gcp-gcr/build-and-push-image:
-          image: eu.gcr.io/${PROJECT_ID}/frotend
+          image: eu.gcr.io/${PROJECT_ID}/frontend
           tag: $CIRCLE_BRANCH
-          path: frontend/
+          path: ~/frontend/
       - gcp-gcr/build-and-push-image:
           image: eu.gcr.io/${PROJECT_ID}/backend
           tag: $CIRCLE_BRANCH
-          path: backend/
+          path: ~/backend/
