@@ -6,10 +6,12 @@ workflows:
   build:
     jobs:
       - gcp-gcr/build-and-push-image:
+          dockerfile: frontend/Dockerfile
           image: eu.gcr.io/${PROJECT_ID}/frontend
           tag: $CIRCLE_BRANCH
           path: ~/project/frontend/
       - gcp-gcr/build-and-push-image:
+          dockerfile: backend/Dockerfile
           image: eu.gcr.io/${PROJECT_ID}/backend
           tag: $CIRCLE_BRANCH
           path: ~/project/backend/
